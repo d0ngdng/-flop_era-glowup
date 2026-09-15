@@ -143,8 +143,14 @@ function defState(){return{
     studyUnit:1000, incA:500, incB:1000,
     msPrevMonth:5000, msYear:10000, msBest:50000, autoBase:true,
     attend:500, noLate:500, focusPerHour:1000, focusRate:70,
-    spendView:'month', spendFold:false, classFold:false
+    spendView:'month', spendFold:false, classFold:false,
+    cloud:{
+      url:'https://yfxzyhevluxmvwuunoei.supabase.co',
+      key:'sb_publishable_VAV8tW-MNC7OfH9otxRq3Q_h0HuLQ1p',
+      code:'my-only-room'
+    }
   },
+  
   themes:[
     {id:'study', name:'공부', color:'#fdb225', kind:'study'},
     {id:'self',  name:'자기관리', color:'#5ec48a', kind:'check', items:[{id:'ex', label:'운동', amount:1000}]},
