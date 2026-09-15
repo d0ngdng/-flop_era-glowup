@@ -101,6 +101,8 @@ img.tt{width:100%; border-radius:12px; border:1px solid var(--line); margin-top:
 .cal button.inwk{background:color-mix(in srgb,var(--main) 22%,var(--soft))}
 .grip{color:var(--sub); font-size:15px; cursor:grab; padding:0 2px}
 .mono{font-variant-numeric:tabular-nums}
+.toast{position:fixed; left:50%; top:14px; transform:translateX(-50%); background:var(--card); border:1px solid var(--line); color:var(--text); padding:9px 16px; border-radius:20px; font-size:12.5px; font-weight:700; box-shadow:0 6px 18px rgba(0,0,0,.18); z-index:60; opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
@@ -504,8 +506,7 @@ function viewSet(){
   <div class="card"><div class="g2">
     <button class="btn ghost" onclick="exportData()">백업 내보내기</button>
     <button class="btn ghost" onclick="document.getElementById('imp').click()">복원</button></div>
-    <input type="file" id="imp" accept=".json" class="hidden">
-    <div class="muted" style="margin-top:8px">데이터는 이 브라우저에 저장됩니다(localStorage).</div>
+    <input type="file" id="imp" accept=".json" class="hidden"><div class="muted" style="margin-top:8px">${(S.settings.cloud&&S.settings.cloud.url&&S.settings.cloud.key&&S.settings.cloud.code)?'데이터는 브라우저(localStorage)와 클라우드에 함께 저장됩니다.':'데이터는 이 브라우저에만 저장됩니다(localStorage). 동기화를 설정하면 다른 기기와도 공유됩니다.'}</div>
   </div>`;
 }
 
