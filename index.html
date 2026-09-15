@@ -129,6 +129,7 @@ img.tt{width:100%; border-radius:12px; border:1px solid var(--line); margin-top:
 
 <div id="modal"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const KEY='chingchan_v2';
 function defState(){return{
@@ -137,7 +138,8 @@ function defState(){return{
     studyUnit:1000, incA:500, incB:1000,
     msPrevMonth:5000, msYear:10000, msBest:50000, autoBase:true,
     attend:500, noLate:500, focusPerHour:1000, focusRate:70,
-    spendView:'month', spendFold:false, classFold:false
+    spendView:'month', spendFold:false, classFold:false,
+    cloud:{url:'',key:'',code:''}
   },
   themes:[
     {id:'study', name:'공부', color:'#fdb225', kind:'study'},
@@ -152,7 +154,15 @@ function load(){
   try{const r=JSON.parse(localStorage.getItem(KEY)); if(r&&r.themes){r.settings={...defState().settings,...r.settings}; return {...defState(),...r};}}catch(e){}
   return defState();
 }
-function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+let cloudTimer=null;
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(S));
+  const c=S.settings.cloud;
+  if(c&&c.url&&c.key&&c.code){
+    clearTimeout(cloudTimer);
+    cloudTimer=setTimeout(()=>pushCloud(true),1200);
+  }
+}
 
 const DAYS=['일','월','화','수','목','금','토'];
 let cur=new Date(); cur.setHours(0,0,0,0);
@@ -475,6 +485,19 @@ function viewSet(){
   </div>`).join('')}
   <button class="btn ghost" style="width:100%" onclick="addT()">+ 테마 추가</button>
 
+  <div class="sec">클라우드 동기화 (Supabase)</div>
+  <div class="card">
+    <div class="f"><label>Supabase URL</label><input type="text" id="cu_url" value="${esc(st.cloud?.url||'')}" placeholder="https://xxxx.supabase.co"></div>
+    <div class="f"><label>Anon Public Key</label><input type="text" id="cu_key" value="${esc(st.cloud?.key||'')}" placeholder="eyJhbGciOi..."></div>
+    <div class="f"><label>동기화 코드 (모든 기기에서 똑같이 입력)</label><input type="text" id="cu_code" value="${esc(st.cloud?.code||'')}" placeholder="나만 아는 문구"></div>
+    <button class="btn" style="width:100%" onclick="saveCloud()">정보 저장</button>
+    <div class="g2" style="margin-top:8px">
+      <button class="btn ghost" onclick="pushCloud()">지금 업로드</button>
+      <button class="btn ghost" onclick="pullCloud()">지금 다운로드</button>
+    </div>
+    <div class="muted" style="margin-top:8px">저장할 때마다 자동으로 클라우드에 업로드돼요. 다른 기기에서는 같은 URL/Key/동기화 코드를 넣고 '지금 다운로드'를 눌러 최신 데이터를 받아오세요.</div>
+  </div>
+
   <div class="sec">데이터</div>
   <div class="card"><div class="g2">
     <button class="btn ghost" onclick="exportData()">백업 내보내기</button>
@@ -482,6 +505,54 @@ function viewSet(){
     <input type="file" id="imp" accept=".json" class="hidden">
     <div class="muted" style="margin-top:8px">데이터는 이 브라우저에 저장됩니다(localStorage).</div>
   </div>`;
+}
+
+/* ============ 클라우드 동기화 (Supabase) ============ */
+let sb=null;
+function ensureSupabase(){
+  const c=S.settings.cloud;
+  if(!c||!c.url||!c.key) return null;
+  if(!sb||sb._url!==c.url||sb._key!==c.key){
+    sb=window.supabase.createClient(c.url,c.key);
+    sb._url=c.url; sb._key=c.key;
+  }
+  return sb;
+}
+function saveCloud(){
+  S.settings.cloud={
+    url:document.getElementById('cu_url').value.trim(),
+    key:document.getElementById('cu_key').value.trim(),
+    code:document.getElementById('cu_code').value.trim()
+  };
+  save(); alert('저장되었습니다. "지금 업로드"를 눌러 첫 동기화를 해보세요.');
+}
+async function pushCloud(silent){
+  const c=S.settings.cloud;
+  if(!c||!c.url||!c.key||!c.code){ if(!silent) alert('먼저 설정에서 Supabase URL / Key / 동기화 코드를 저장하세요'); return; }
+  const client=ensureSupabase(); if(!client) return;
+  try{
+    const {error}=await client.from('app_data').upsert({sync_code:c.code, data:S, updated_at:new Date().toISOString()});
+    if(error) throw error;
+    if(!silent) alert('업로드 완료');
+  }catch(e){ if(!silent) alert('업로드 실패: '+e.message); }
+}
+async function pullCloud(){
+  const c=S.settings.cloud;
+  if(!c||!c.url||!c.key||!c.code){ alert('먼저 설정에서 Supabase URL / Key / 동기화 코드를 저장하세요'); return; }
+  const client=ensureSupabase(); if(!client) return;
+  try{
+    const {data,error}=await client.from('app_data').select('data').eq('sync_code',c.code).single();
+    if(error) throw error;
+    if(data&&data.data){
+      const cloudCfg=c;
+      S=data.data;
+      S.settings=S.settings||{};
+      S.settings.cloud=cloudCfg;
+      save(); alert('다운로드 완료'); go('home');
+    } else {
+      alert('클라우드에 저장된 데이터가 아직 없어요. 먼저 이 기기에서 "지금 업로드"를 눌러주세요.');
+    }
+  }catch(e){ alert('다운로드 실패: '+e.message); }
 }
 
 function closeM(){document.getElementById('modal').innerHTML='';}
