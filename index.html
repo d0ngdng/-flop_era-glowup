@@ -734,6 +734,9 @@ function bind(){
   }
 }
 (async function init(){
+  // 1. 빈 화면에서 멈추지 않도록 로컬 데이터로 화면을 먼저 그립니다.
+  render();
+
   const c=S.settings.cloud;
   if(c&&c.url&&c.key&&c.code&&!c.url.includes('여기에')){
     try{
@@ -746,29 +749,28 @@ function bind(){
           S.settings=S.settings||{};
           S.settings.cloud=cfg;
           localStorage.setItem(KEY,JSON.stringify(S));
+          
+          // 2. 클라우드에서 새 데이터를 성공적으로 받아오면 화면을 다시 그립니다.
           render();
           showToast('☁️ 클라우드에서 최신 데이터를 불러왔습니다');
           return;
         } else if(error){
           console.error('init pull error',error);
-          render();
           showToast('⚠️ 클라우드 연결 실패 (설정값 확인)');
           return;
         } else {
-          render();
           showToast('☁️ 클라우드에 아직 데이터 없음 — "지금 업로드"를 눌러주세요');
           return;
         }
       }
     }catch(e){
       console.error('init error',e);
-      render();
       showToast('⚠️ 클라우드 연결 실패');
       return;
     }
   }
-  render();
 })();
+
 </script>
 </body>
 </html>
