@@ -80,7 +80,7 @@ nav button.on{color:var(--main)}
 .sec{font-size:12px; color:var(--sub); font-weight:800; margin:18px 2px 8px; letter-spacing:.3px}
 .f{margin-bottom:10px}
 .f label{display:block; font-size:12px; color:var(--sub); margin-bottom:4px; font-weight:700}
-.g2{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px}
+.g2{display:grid; grid-template-columns:1fr 1fr; gap:8px}
 .g3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px}
 .item{border:1px solid var(--line); border-radius:12px; padding:10px; margin-bottom:8px; background:var(--bg)}
 .item .t{font-weight:800; font-size:13.5px; display:flex; align-items:center; gap:6px}
@@ -103,6 +103,9 @@ img.tt{width:100%; border-radius:12px; border:1px solid var(--line); margin-top:
 .mono{font-variant-numeric:tabular-nums}
 .toast{position:fixed; left:50%; top:14px; transform:translateX(-50%); background:var(--card); border:1px solid var(--line); color:var(--text); padding:9px 16px; border-radius:20px; font-size:12.5px; font-weight:700; box-shadow:0 6px 18px rgba(0,0,0,.18); z-index:60; opacity:0; transition:opacity .25s; pointer-events:none; max-width:88vw; text-align:center}
 .toast.show{opacity:1}
+.ledger-date{width:52px; flex:0 0 52px; color:var(--sub); font-size:12px}
+.ledger-memo{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ledger-amt{width:88px; flex:0 0 88px; text-align:right}
 </style>
 </head>
 <body>
@@ -456,12 +459,12 @@ function viewSpend(){
       <button class="btn xs ghost" onclick="S.settings.spendView='${all?'month':'all'}';save();render()">${all?'전체 보기':(cur.getMonth()+1)+'월 보기'}</button>
       <button class="btn xs ghost" onclick="S.settings.spendFold=!S.settings.spendFold;save();render()">${st.spendFold?'▸ 펼치기':'▾ 접기'}</button>
       <span class="pay" style="color:${mSum<0?'#e2574c':'var(--main)'}">${won(mSum)}</span></h2>
-    ${st.spendFold?`<div class="muted">${list.length}건 접힘</div>`:
-      (list.map(e=>`<div class="row"><b>${esc(e.memo||(e.amount<0?'사용':'입금'))}</b>
-        <span class="g" style="font-size:12px">${e.date}</span>
-        <b style="color:${e.amount<0?'#e2574c':'#2fa36b'};min-width:80px;text-align:right">${e.amount>0?'+':''}${won(e.amount)}</b>
-        <button class="del" onclick="delLed(${e.i})">✕</button></div>`).join('')||'<div class="muted">없음</div>')}
-  </div>`;
+        ${st.spendFold?`<div class="muted">${list.length}건 접힘</div>`:
+      ([...list].sort((a,b)=> b.date.localeCompare(a.date) || b.i-a.i).map(e=>`<div class="row" onclick="openEditLed(${e.i})" style="cursor:pointer">
+        <span class="ledger-date">${e.date.slice(5).replace('-','.')}</span>
+        <b class="ledger-memo">${esc(e.memo||(e.amount<0?'사용':'입금'))}</b>
+        <b class="ledger-amt" style="color:${e.amount<0?'#e2574c':'#2fa36b'}">${e.amount>0?'+':''}${won(e.amount)}</b>
+        <button class="del" onclick="event.stopPropagation();delLed(${e.i})">✕</button></div>`).join('')||'<div class="muted">없음</div>')}  </div>`;
 }
 
 /* ============ 설정 ============ */
