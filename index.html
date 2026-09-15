@@ -546,13 +546,14 @@ function showToast(msg){
 function ensureSupabase(){
   const c=S.settings.cloud;
   if(!c||!c.url||!c.key) return null;
+  if(!window.supabase){ console.error('supabase-js 라이브러리가 로드되지 않았습니다'); return null; }
   if(!sb||sb._url!==c.url||sb._key!==c.key){
     sb=window.supabase.createClient(c.url,c.key);
     sb._url=c.url; sb._key=c.key;
   }
   return sb;
 }
-function saveCloud(){
+  function saveCloud(){
   S.settings.cloud={
     url:document.getElementById('cu_url').value.trim(),
     key:document.getElementById('cu_key').value.trim(),
@@ -561,7 +562,8 @@ function saveCloud(){
   save(); alert('저장되었습니다. "지금 업로드"를 눌러 첫 동기화를 해보세요.');
 }
 async function pushCloud(silent){
-  const c=S.settings.cloud;
+  const client=ensureSupabase();
+  if(!client){ if(!silent) alert('Supabase 라이브러리를 불러오지 못했습니다. 새로고침 후 다시 시도하세요.'); else showToast('⚠️ 라이브러리 로드 실패'); return; }
   if(!c||!c.url||!c.key||!c.code){ if(!silent) alert('먼저 설정에서 Supabase URL / Key / 동기화 코드를 저장하세요'); return; }
   const client=ensureSupabase(); if(!client) return;
   try{
@@ -573,7 +575,8 @@ async function pushCloud(silent){
 async function pullCloud(){
   const c=S.settings.cloud;
   if(!c||!c.url||!c.key||!c.code){ alert('먼저 설정에서 Supabase URL / Key / 동기화 코드를 저장하세요'); return; }
-  const client=ensureSupabase(); if(!client) return;
+  const client=ensureSupabase();
+  if(!client){ alert('Supabase 라이브러리를 불러오지 못했습니다. 새로고침 후 다시 시도하세요.'); return; }
   try{
     const {data,error}=await client.from('app_data').select('data').eq('sync_code',c.code).single();
     if(error) throw error;
