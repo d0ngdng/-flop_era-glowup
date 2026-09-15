@@ -166,7 +166,15 @@ function load(){
   try{const r=JSON.parse(localStorage.getItem(KEY)); if(r&&r.themes){r.settings={...defState().settings,...r.settings}; return {...defState(),...r};}}catch(e){}
   return defState();
 }
-function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+let cloudTimer=null;
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(S));
+  const c=S.settings.cloud;
+  if(c&&c.url&&c.key&&c.code){
+    clearTimeout(cloudTimer);
+    cloudTimer=setTimeout(()=>pushCloud(true),1200);
+  }
+}
 
 /* ============ 유틸 ============ */
 const DAYS=['일','월','화','수','목','금','토'];
@@ -557,8 +565,8 @@ async function pushCloud(silent){
   try{
     const {error}=await client.from('app_data').upsert({sync_code:c.code, data:S, updated_at:new Date().toISOString()});
     if(error) throw error;
-    if(!silent) alert('업로드 완료');
-  }catch(e){ if(!silent) alert('업로드 실패: '+e.message); }
+    if(!silent) alert('업로드 완료'); else showToast('☁️ 자동 업로드 완료');
+  }catch(e){ if(!silent) alert('업로드 실패: '+e.message); else{ showToast('⚠️ 자동 업로드 실패'); console.error('pushCloud error',e); } }
 }
 async function pullCloud(){
   const c=S.settings.cloud;
