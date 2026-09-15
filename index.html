@@ -649,7 +649,42 @@ function bind(){
     });
   }
 }
-render();
+(async function init(){
+  const c=S.settings.cloud;
+  if(c&&c.url&&c.key&&c.code&&!c.url.includes('여기에')){
+    try{
+      const client=ensureSupabase();
+      if(client){
+        const {data,error}=await client.from('app_data').select('data').eq('sync_code',c.code).single();
+        if(!error&&data&&data.data){
+          const cfg=c;
+          S=data.data;
+          S.settings=S.settings||{};
+          S.settings.cloud=cfg;
+          localStorage.setItem(KEY,JSON.stringify(S));
+          render();
+          showToast('☁️ 클라우드에서 최신 데이터를 불러왔습니다');
+          return;
+        } else if(error){
+          console.error('init pull error',error);
+          render();
+          showToast('⚠️ 클라우드 연결 실패 (설정값 확인)');
+          return;
+        } else {
+          render();
+          showToast('☁️ 클라우드에 아직 데이터 없음 — "지금 업로드"를 눌러주세요');
+          return;
+        }
+      }
+    }catch(e){
+      console.error('init error',e);
+      render();
+      showToast('⚠️ 클라우드 연결 실패');
+      return;
+    }
+  }
+  render();
+})();
 </script>
 </body>
 </html>
