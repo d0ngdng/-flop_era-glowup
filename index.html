@@ -562,17 +562,17 @@ function ensureSupabase(){
   save(); alert('저장되었습니다. "지금 업로드"를 눌러 첫 동기화를 해보세요.');
 }
 async function pushCloud(silent){
+  const c=S.settings.cloud;
+  if(!c||!c.url||!c.key||!c.code){ if(!silent) alert('먼저 설정에서 Supabase URL / Key / 동기화 코드를 저장하세요'); return; }
   const client=ensureSupabase();
   if(!client){ if(!silent) alert('Supabase 라이브러리를 불러오지 못했습니다. 새로고침 후 다시 시도하세요.'); else showToast('⚠️ 라이브러리 로드 실패'); return; }
-  if(!c||!c.url||!c.key||!c.code){ if(!silent) alert('먼저 설정에서 Supabase URL / Key / 동기화 코드를 저장하세요'); return; }
-  const client=ensureSupabase(); if(!client) return;
   try{
     const {error}=await client.from('app_data').upsert({sync_code:c.code, data:S, updated_at:new Date().toISOString()});
     if(error) throw error;
     if(!silent) alert('업로드 완료'); else showToast('☁️ 자동 업로드 완료');
   }catch(e){ if(!silent) alert('업로드 실패: '+e.message); else{ showToast('⚠️ 자동 업로드 실패'); console.error('pushCloud error',e); } }
 }
-async function pullCloud(){
+  async function pullCloud(){
   const c=S.settings.cloud;
   if(!c||!c.url||!c.key||!c.code){ alert('먼저 설정에서 Supabase URL / Key / 동기화 코드를 저장하세요'); return; }
   const client=ensureSupabase();
