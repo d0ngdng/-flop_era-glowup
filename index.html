@@ -284,17 +284,17 @@ function themeCard(t,key,i){
     <span class="pay" style="color:${t.color}">${won(tot)}</span></h2>`;
   let body='';
   if(t.kind==='study'){
-    const s=calcStudy(key),l=log(key);
-        body=`<div class="tinput">
+    const s=calcStudy(key),l=log(key);    body=`<div class="tinput">
       <input type="number" id="sh" value="${Math.floor(l.studySec/3600)}" min="0"><em>h</em>
       <input type="number" id="sm" value="${Math.floor(l.studySec%3600/60)}" min="0"><em>m</em>
       <input type="number" id="ss" value="${l.studySec%60}" min="0"><em>s</em>
-     </div>    <div class="chips" style="justify-content:center">
+      <button class="btn sm" onclick="saveStudy()">.</button>
+    </div>
+    <div class="chips" style="justify-content:center">
       <button class="chip" onclick="addStudy(1800)">+30분</button>
       <button class="chip" onclick="addStudy(3600)">+1시간</button>
       <button class="chip" onclick="addStudy(-1800)">−30분</button>
       <button class="chip" onclick="resetStudy()">초기화</button></div>
-      <button class="chip" onclick="saveStudy()">.</button>
     <div class="row">기본 <span class="g">${s.n}단위 × ${won(S.settings.studyUnit)} = ${won(s.base)}</span></div>
     <div class="row">인센티브 <span class="g">${won(s.inc)}</span></div>
     <div class="row" style="align-items:flex-start">
